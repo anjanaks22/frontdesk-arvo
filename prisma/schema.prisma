@@ -1,0 +1,119 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum Role {
+  AGENT
+  CUSTOMER
+  ADMIN
+}
+
+enum Priority {
+  URGENT  // "Customer cannot work at all": Reply <= 2 biz hours, Resolve <= same working day (18:30)
+  MEDIUM  // "Medium problems": Reply <= 4.5 biz hours (half day), Resolve <= 3 biz days
+  LOW     // "Small problems / questions": Reply <= 1 biz day (9 biz hours), Resolve <= 1 biz week (5 biz days)
+}
+
+enum TicketStatus {
+  OPEN
+  IN_PROGRESS
+  WAITING_ON_CUSTOMER  // SLA clock pauses!
+  RESOLVED             // Can be reopened within 7 days
+  CLOSED               // Permanently closed (inactivity after 5 biz days or >7 days post-resolution)
+}
+
+model User {
+  id              String            @id @default(cuid())
+  name            String
+  email           String            @unique
+  role            Role              @default(AGENT)
+  avatarUrl       String?
+  assignedTickets Ticket[]          @relation("AssignedAgent")
+  messages        TicketMessage[]
+  auditLogs       TicketAuditLog[]
+  createdAt       DateTime          @default(now())
+  updatedAt       DateTime          @updatedAt
+}
+
+model Ticket {
+  id                  String            @id @default(cuid())
+  ticketNumber        String            @unique // e.g. "INC-0320"
+  title               String
+  description         String
+  priority            Priority          @default(MEDIUM)
+  status              TicketStatus      @default(OPEN)
+  customerName        String
+  customerEmail       String
+  
+  // Assignment with optimistic lock (Prevents INC-0291)
+  assignedToId        String?
+  assignedTo          User?             @relation("AssignedAgent", fields: [assignedToId], references: [id])
+  version             Int               @default(1)
+
+  // Timestamps
+  createdAt           DateTime          @default(now())
+  updatedAt           DateTime          @updatedAt
+  firstResponseAt     DateTime?
+  resolvedAt          DateTime?
+  closedAt            DateTime?
+
+  // SLA Deadlines (Working hours 09:30 - 18:30 Mon-Fri)
+  slaReplyDue         DateTime
+  slaResolveDue       DateTime
+  slaReplyBreached    Boolean           @default(false)
+  slaResolveBreached  Boolean           @default(false)
+
+  // Pausing tracking for WAITING_ON_CUSTOMER
+  pausedAt            DateTime?
+  totalPausedMs       BigInt            @default(0)
+
+  // 1-week Reopen window restriction
+  reopenDeadline      DateTime?
+
+  messages            TicketMessage[]
+  auditLogs           TicketAuditLog[]
+
+  @@index([status])
+  @@index([priority])
+  @@index([assignedToId])
+}
+
+model TicketMessage {
+  id          String    @id @default(cuid())
+  ticketId    String
+  ticket      Ticket    @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+  senderId    String?
+  sender      User?     @relation(fields: [senderId], references: [id])
+  senderName  String
+  senderRole  String    // "AGENT" | "CUSTOMER" | "SYSTEM"
+  
+  // INC-0304 Fix: Private internal notes must NEVER leak to customers or customer-facing APIs
+  isPrivate   Boolean   @default(false)
+  body        String
+  createdAt   DateTime  @default(now())
+
+  @@index([ticketId])
+}
+
+model TicketAuditLog {
+  id          String    @id @default(cuid())
+  ticketId    String
+  ticket      Ticket    @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+  actorId     String?
+  actor       User?     @relation(fields: [actorId], references: [id])
+  actorName   String
+  actorRole   String
+  
+  // INC-0318 Fix: Immutable chronological audit trail
+  action      String    // e.g. "CREATED", "CLAIMED", "REPLY_SENT", "NOTE_ADDED", "STATUS_CHANGED", "PRIORITY_CHANGED", "AUTO_CLOSED", "REOPENED"
+  oldValue    String?
+  newValue    String?
+  details     String?
+  createdAt   DateTime  @default(now())
+
+  @@index([ticketId])
+}
