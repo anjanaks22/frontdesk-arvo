@@ -1,12 +1,6 @@
 import { TicketMessageDto } from "./types";
 
-/**
- * INC-0304 Solution:
- * "Private team notes must never be shown to a customer. Not on a screen.
- * Not in an API response. Not in an export. Not in a list."
- *
- * This sanitizer strips out internal/private notes whenever the consumer is a customer or public endpoint.
- */
+
 export function sanitizeMessagesForRole(
   messages: Array<{
     id: string;
@@ -23,9 +17,9 @@ export function sanitizeMessagesForRole(
   return messages
     .filter((msg) => {
       if (requesterRole === "CUSTOMER") {
-        return !msg.isPrivate; // Customers NEVER see private notes
+        return !msg.isPrivate;
       }
-      return true; // Agents and Admins see both
+      return true;
     })
     .map((msg) => ({
       id: msg.id,

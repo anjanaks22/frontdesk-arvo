@@ -41,7 +41,7 @@ export default function AgentDashboard() {
   const [isLoading, setIsLoading] = useState(false);
   const [isDetailLoading, setIsDetailLoading] = useState(false);
 
-  // Detail view state
+
   const [activeTab, setActiveTab] = useState<"messages" | "audit">("messages");
   const [composerMode, setComposerMode] = useState<"public" | "internal">("public");
   const [messageText, setMessageText] = useState("");
@@ -49,7 +49,7 @@ export default function AgentDashboard() {
   const [actionError, setActionError] = useState<string | null>(null);
   const [actionSuccess, setActionSuccess] = useState<string | null>(null);
 
-  // New Ticket Modal State
+
   const [isNewTicketOpen, setIsNewTicketOpen] = useState(false);
   const [newTitle, setNewTitle] = useState("");
   const [newDesc, setNewDesc] = useState("");
@@ -58,20 +58,20 @@ export default function AgentDashboard() {
   const [newCustomerEmail, setNewCustomerEmail] = useState("");
   const [isCreating, setIsCreating] = useState(false);
 
-  // Load Agents
+
   useEffect(() => {
     fetch("/api/agents")
       .then((res) => res.json())
       .then((data) => {
         if (data.success && data.agents.length > 0) {
           setAgents(data.agents);
-          setCurrentAgent(data.agents[0]); // Default to Meera (Lead)
+          setCurrentAgent(data.agents[0]);
         }
       })
       .catch((err) => console.error(err));
   }, []);
 
-  // Fetch Tickets List
+
   const fetchTickets = useCallback(async () => {
     setIsLoading(true);
     try {
@@ -103,7 +103,7 @@ export default function AgentDashboard() {
     fetchTickets();
   }, [fetchTickets]);
 
-  // Fetch Selected Ticket Details
+
   const fetchTicketDetail = useCallback(async (id: string) => {
     setIsDetailLoading(true);
     setActionError(null);
@@ -127,7 +127,7 @@ export default function AgentDashboard() {
     }
   }, [selectedTicketId, fetchTicketDetail]);
 
-  // Atomic Claim Ticket Action (INC-0291 Fix)
+
   const handleClaimTicket = async () => {
     if (!ticketDetail || !currentAgent) return;
     setActionError(null);
@@ -154,7 +154,7 @@ export default function AgentDashboard() {
     }
   };
 
-  // Send Public Reply or Internal Note
+
   const handleSendMessage = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!ticketDetail || !currentAgent || !messageText.trim()) return;
@@ -196,7 +196,7 @@ export default function AgentDashboard() {
     }
   };
 
-  // Update Status
+
   const handleStatusChange = async (newStatus: TicketStatus) => {
     if (!ticketDetail || !currentAgent) return;
     setActionError(null);
@@ -227,7 +227,7 @@ export default function AgentDashboard() {
     }
   };
 
-  // Update Priority (Answers the Meeting Question)
+
   const handlePriorityChange = async (priority: Priority) => {
     if (!ticketDetail || !currentAgent) return;
     if (
@@ -265,7 +265,7 @@ export default function AgentDashboard() {
     }
   };
 
-  // Create Ticket
+
   const handleCreateTicket = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newTitle.trim() || !newDesc.trim() || !newCustomerName.trim() || !newCustomerEmail.trim()) {
@@ -303,12 +303,12 @@ export default function AgentDashboard() {
     }
   };
 
-  // Calculate Metrics
+
   const lateCount = tickets.filter((t) => t.slaStatus?.isLate).length;
   const waitingCount = tickets.filter((t) => t.status === "WAITING_ON_CUSTOMER").length;
   const urgentCount = tickets.filter((t) => t.priority === "URGENT" && t.status !== "RESOLVED" && t.status !== "CLOSED").length;
 
-  // Format SLA Display
+
   const formatSlaCountdown = (remainingMinutes: number, isLate: boolean, isPaused: boolean) => {
     if (isPaused) {
       return (
@@ -338,7 +338,7 @@ export default function AgentDashboard() {
 
   return (
     <div className="min-h-screen flex flex-col bg-slate-100 text-slate-800">
-      {/* Top Navbar */}
+      { }
       <header className="bg-slate-900 text-white border-b border-slate-800 px-6 py-3 flex items-center justify-between sticky top-0 z-30 shadow-md">
         <div className="flex items-center gap-3">
           <div className="w-8 h-8 rounded-lg bg-blue-600 flex items-center justify-center font-bold text-lg tracking-wider text-white shadow-inner">
@@ -357,7 +357,7 @@ export default function AgentDashboard() {
           </div>
         </div>
 
-        {/* Active Agent Selector */}
+        { }
         <div className="flex items-center gap-4">
           <button
             onClick={() => setIsNewTicketOpen(true)}
@@ -386,9 +386,9 @@ export default function AgentDashboard() {
         </div>
       </header>
 
-      {/* Main Container */}
+      { }
       <main className="flex-1 max-w-7xl w-full mx-auto p-4 flex flex-col gap-4">
-        {/* Metric Cards */}
+        { }
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
           <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex items-center justify-between">
             <div>
@@ -435,56 +435,52 @@ export default function AgentDashboard() {
           </div>
         </div>
 
-        {/* Master-Detail Ticket Workspace */}
+        { }
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 flex-1">
-          {/* Left Column: Tickets Queue (5 cols) */}
+          { }
           <div className="lg:col-span-5 bg-white rounded-xl border border-slate-200 shadow-sm flex flex-col h-[760px] overflow-hidden">
-            {/* Filter Tabs & Search */}
+            { }
             <div className="p-3 border-b border-slate-200 bg-slate-50 flex flex-col gap-2">
               <div className="flex items-center gap-1 overflow-x-auto pb-1 text-xs font-medium">
                 <button
                   onClick={() => setActiveFilter("all")}
-                  className={`px-3 py-1.5 rounded-lg whitespace-nowrap transition ${
-                    activeFilter === "all"
+                  className={`px-3 py-1.5 rounded-lg whitespace-nowrap transition ${activeFilter === "all"
                       ? "bg-slate-900 text-white font-semibold"
                       : "text-slate-600 hover:bg-slate-200"
-                  }`}
+                    }`}
                 >
                   All Tickets
                 </button>
                 <button
                   onClick={() => setActiveFilter("late")}
-                  className={`px-3 py-1.5 rounded-lg whitespace-nowrap transition flex items-center gap-1 ${
-                    activeFilter === "late"
+                  className={`px-3 py-1.5 rounded-lg whitespace-nowrap transition flex items-center gap-1 ${activeFilter === "late"
                       ? "bg-red-600 text-white font-semibold"
                       : "text-red-700 hover:bg-red-100"
-                  }`}
+                    }`}
                 >
                   <AlertTriangle className="w-3.5 h-3.5" /> Late ({lateCount})
                 </button>
                 <button
                   onClick={() => setActiveFilter("waiting")}
-                  className={`px-3 py-1.5 rounded-lg whitespace-nowrap transition flex items-center gap-1 ${
-                    activeFilter === "waiting"
+                  className={`px-3 py-1.5 rounded-lg whitespace-nowrap transition flex items-center gap-1 ${activeFilter === "waiting"
                       ? "bg-amber-600 text-white font-semibold"
                       : "text-amber-700 hover:bg-amber-100"
-                  }`}
+                    }`}
                 >
                   <Clock className="w-3.5 h-3.5" /> Waiting ({waitingCount})
                 </button>
                 <button
                   onClick={() => setActiveFilter("assigned")}
-                  className={`px-3 py-1.5 rounded-lg whitespace-nowrap transition ${
-                    activeFilter === "assigned"
+                  className={`px-3 py-1.5 rounded-lg whitespace-nowrap transition ${activeFilter === "assigned"
                       ? "bg-blue-600 text-white font-semibold"
                       : "text-blue-700 hover:bg-blue-100"
-                  }`}
+                    }`}
                 >
                   Assigned to Me
                 </button>
               </div>
 
-              {/* Search Bar */}
+              { }
               <div className="relative">
                 <Search className="w-4 h-4 absolute left-3 top-2.5 text-slate-400" />
                 <input
@@ -504,7 +500,7 @@ export default function AgentDashboard() {
               </div>
             </div>
 
-            {/* Ticket List */}
+            { }
             <div className="flex-1 overflow-y-auto divide-y divide-slate-100">
               {isLoading && tickets.length === 0 ? (
                 <div className="p-8 text-center text-xs text-slate-400">Loading tickets...</div>
@@ -520,13 +516,12 @@ export default function AgentDashboard() {
                     <div
                       key={t.id}
                       onClick={() => setSelectedTicketId(t.id)}
-                      className={`p-3.5 cursor-pointer transition flex flex-col gap-1.5 border-l-4 ${
-                        isSelected
+                      className={`p-3.5 cursor-pointer transition flex flex-col gap-1.5 border-l-4 ${isSelected
                           ? "bg-blue-50/70 border-l-blue-600"
                           : isLate
-                          ? "border-l-red-500 hover:bg-slate-50"
-                          : "border-l-transparent hover:bg-slate-50"
-                      }`}
+                            ? "border-l-red-500 hover:bg-slate-50"
+                            : "border-l-transparent hover:bg-slate-50"
+                        }`}
                     >
                       <div className="flex items-center justify-between">
                         <div className="flex items-center gap-2">
@@ -534,13 +529,12 @@ export default function AgentDashboard() {
                             {t.ticketNumber}
                           </span>
                           <span
-                            className={`text-[10px] font-bold px-1.5 py-0.5 rounded uppercase ${
-                              t.priority === "URGENT"
+                            className={`text-[10px] font-bold px-1.5 py-0.5 rounded uppercase ${t.priority === "URGENT"
                                 ? "bg-red-100 text-red-800"
                                 : t.priority === "MEDIUM"
-                                ? "bg-amber-100 text-amber-800"
-                                : "bg-slate-100 text-slate-700"
-                            }`}
+                                  ? "bg-amber-100 text-amber-800"
+                                  : "bg-slate-100 text-slate-700"
+                              }`}
                           >
                             {t.priority}
                           </span>
@@ -558,17 +552,16 @@ export default function AgentDashboard() {
                         <span className="truncate max-w-[160px]">{t.customerName}</span>
                         <div className="flex items-center gap-1.5">
                           <span
-                            className={`px-1.5 py-0.5 rounded text-[10px] font-medium ${
-                              t.status === "WAITING_ON_CUSTOMER"
+                            className={`px-1.5 py-0.5 rounded text-[10px] font-medium ${t.status === "WAITING_ON_CUSTOMER"
                                 ? "bg-amber-100 text-amber-800"
                                 : t.status === "RESOLVED"
-                                ? "bg-emerald-100 text-emerald-800"
-                                : t.status === "CLOSED"
-                                ? "bg-slate-200 text-slate-700"
-                                : t.status === "IN_PROGRESS"
-                                ? "bg-blue-100 text-blue-800"
-                                : "bg-purple-100 text-purple-800"
-                            }`}
+                                  ? "bg-emerald-100 text-emerald-800"
+                                  : t.status === "CLOSED"
+                                    ? "bg-slate-200 text-slate-700"
+                                    : t.status === "IN_PROGRESS"
+                                      ? "bg-blue-100 text-blue-800"
+                                      : "bg-purple-100 text-purple-800"
+                              }`}
                           >
                             {t.status.replace(/_/g, " ")}
                           </span>
@@ -585,7 +578,7 @@ export default function AgentDashboard() {
             </div>
           </div>
 
-          {/* Right Column: Ticket Workspace (7 cols) */}
+          { }
           <div className="lg:col-span-7 bg-white rounded-xl border border-slate-200 shadow-sm flex flex-col h-[760px] overflow-hidden">
             {isDetailLoading || !ticketDetail ? (
               <div className="flex-1 flex items-center justify-center text-slate-400 text-sm">
@@ -593,7 +586,7 @@ export default function AgentDashboard() {
               </div>
             ) : (
               <>
-                {/* Ticket Header & Action Bar */}
+                { }
                 <div className="p-4 border-b border-slate-200 bg-slate-50/70 flex flex-col gap-3">
                   <div className="flex items-start justify-between gap-3">
                     <div>
@@ -610,7 +603,7 @@ export default function AgentDashboard() {
                       </p>
                     </div>
 
-                    {/* Claim Button (INC-0291 Concurrency control) */}
+                    { }
                     <div>
                       {ticketDetail.assignedToId ? (
                         <div className="flex items-center gap-1.5 text-xs text-slate-600 bg-slate-100 px-2.5 py-1.5 rounded-lg border border-slate-200">
@@ -628,10 +621,10 @@ export default function AgentDashboard() {
                     </div>
                   </div>
 
-                  {/* Operational Controls: Priority, Status, SLA badges */}
+                  { }
                   <div className="flex flex-wrap items-center justify-between gap-2 pt-2 border-t border-slate-200 text-xs">
                     <div className="flex items-center gap-3">
-                      {/* Priority Selector */}
+                      { }
                       <div className="flex items-center gap-1.5">
                         <span className="text-slate-500">Urgency:</span>
                         <select
@@ -645,7 +638,7 @@ export default function AgentDashboard() {
                         </select>
                       </div>
 
-                      {/* Status Selector */}
+                      { }
                       <div className="flex items-center gap-1.5">
                         <span className="text-slate-500">Status:</span>
                         <select
@@ -662,7 +655,7 @@ export default function AgentDashboard() {
                       </div>
                     </div>
 
-                    {/* SLA Deadlines Overview */}
+                    { }
                     <div className="flex items-center gap-2">
                       <div className="text-[11px] bg-white border border-slate-200 px-2 py-1 rounded">
                         <span className="text-slate-400">Reply Due: </span>
@@ -693,7 +686,7 @@ export default function AgentDashboard() {
                     </div>
                   </div>
 
-                  {/* Feedback Alerts */}
+                  { }
                   {actionError && (
                     <div className="p-2 bg-red-50 border border-red-200 rounded text-xs text-red-700 flex items-center justify-between">
                       <span>{actionError}</span>
@@ -712,31 +705,29 @@ export default function AgentDashboard() {
                   )}
                 </div>
 
-                {/* Tabs: Messages vs Audit Trail */}
+                { }
                 <div className="border-b border-slate-200 px-4 flex items-center gap-6 text-xs font-semibold bg-white">
                   <button
                     onClick={() => setActiveTab("messages")}
-                    className={`py-2.5 flex items-center gap-1.5 border-b-2 transition ${
-                      activeTab === "messages"
+                    className={`py-2.5 flex items-center gap-1.5 border-b-2 transition ${activeTab === "messages"
                         ? "border-blue-600 text-blue-600"
                         : "border-transparent text-slate-500 hover:text-slate-800"
-                    }`}
+                      }`}
                   >
                     <MessageSquare className="w-3.5 h-3.5" /> Conversation ({ticketDetail.messages.length})
                   </button>
                   <button
                     onClick={() => setActiveTab("audit")}
-                    className={`py-2.5 flex items-center gap-1.5 border-b-2 transition ${
-                      activeTab === "audit"
+                    className={`py-2.5 flex items-center gap-1.5 border-b-2 transition ${activeTab === "audit"
                         ? "border-blue-600 text-blue-600"
                         : "border-transparent text-slate-500 hover:text-slate-800"
-                    }`}
+                      }`}
                   >
                     <History className="w-3.5 h-3.5" /> Audit Trail & Proof (INC-0318)
                   </button>
                 </div>
 
-                {/* Tab Body */}
+                { }
                 <div className="flex-1 overflow-y-auto p-4 flex flex-col gap-3 bg-slate-50/40">
                   {activeTab === "messages" ? (
                     ticketDetail.messages.map((msg) => {
@@ -744,7 +735,7 @@ export default function AgentDashboard() {
                       const isPrivateNote = msg.isPrivate;
 
                       if (isPrivateNote) {
-                        // INC-0304 Visual Guard: Amber banner with lock
+
                         return (
                           <div
                             key={msg.id}
@@ -776,11 +767,10 @@ export default function AgentDashboard() {
                       return (
                         <div
                           key={msg.id}
-                          className={`flex flex-col max-w-[85%] rounded-xl p-3.5 text-xs shadow-sm ${
-                            isCustomer
+                          className={`flex flex-col max-w-[85%] rounded-xl p-3.5 text-xs shadow-sm ${isCustomer
                               ? "bg-white border border-slate-200 self-start text-slate-800"
                               : "bg-blue-600 text-white self-end"
-                          }`}
+                            }`}
                         >
                           <div className="flex items-center justify-between gap-4 mb-1">
                             <span className={`font-bold ${isCustomer ? "text-slate-900" : "text-blue-100"}`}>
@@ -798,7 +788,7 @@ export default function AgentDashboard() {
                       );
                     })
                   ) : (
-                    /* Audit Log Timeline (INC-0318 Proof) */
+
                     <div className="divide-y divide-slate-200 bg-white rounded-lg border border-slate-200 p-2">
                       <div className="p-2 text-xs text-slate-500 bg-slate-50 rounded mb-2 flex items-center gap-2">
                         <Shield className="w-4 h-4 text-emerald-600" />
@@ -830,28 +820,26 @@ export default function AgentDashboard() {
                   )}
                 </div>
 
-                {/* Composer Form */}
+                { }
                 <div className="p-3 bg-white border-t border-slate-200">
                   <div className="flex items-center gap-2 mb-2">
                     <button
                       type="button"
                       onClick={() => setComposerMode("public")}
-                      className={`text-xs font-semibold px-3 py-1 rounded-md transition flex items-center gap-1.5 ${
-                        composerMode === "public"
+                      className={`text-xs font-semibold px-3 py-1 rounded-md transition flex items-center gap-1.5 ${composerMode === "public"
                           ? "bg-blue-600 text-white shadow-sm"
                           : "bg-slate-100 text-slate-600 hover:bg-slate-200"
-                      }`}
+                        }`}
                     >
                       <MessageSquare className="w-3.5 h-3.5" /> Reply to Customer
                     </button>
                     <button
                       type="button"
                       onClick={() => setComposerMode("internal")}
-                      className={`text-xs font-semibold px-3 py-1 rounded-md transition flex items-center gap-1.5 ${
-                        composerMode === "internal"
+                      className={`text-xs font-semibold px-3 py-1 rounded-md transition flex items-center gap-1.5 ${composerMode === "internal"
                           ? "bg-amber-600 text-white shadow-sm"
                           : "bg-amber-50 text-amber-800 border border-amber-200 hover:bg-amber-100"
-                      }`}
+                        }`}
                     >
                       <Lock className="w-3.5 h-3.5" /> Write Team Note (INC-0304 Protected)
                     </button>
@@ -874,20 +862,18 @@ export default function AgentDashboard() {
                           ? "Type private team note here (visible only to Arvo agents)..."
                           : "Type reply to customer..."
                       }
-                      className={`flex-1 text-xs border rounded-lg p-2 focus:outline-none focus:ring-1 resize-none ${
-                        composerMode === "internal"
+                      className={`flex-1 text-xs border rounded-lg p-2 focus:outline-none focus:ring-1 resize-none ${composerMode === "internal"
                           ? "border-amber-300 focus:ring-amber-500 bg-amber-50/30"
                           : "border-slate-300 focus:ring-blue-500"
-                      }`}
+                        }`}
                     />
                     <button
                       type="submit"
                       disabled={isSending || !messageText.trim()}
-                      className={`px-4 rounded-lg text-white font-semibold text-xs flex items-center gap-1.5 transition self-end h-9 ${
-                        composerMode === "internal"
+                      className={`px-4 rounded-lg text-white font-semibold text-xs flex items-center gap-1.5 transition self-end h-9 ${composerMode === "internal"
                           ? "bg-amber-600 hover:bg-amber-500 disabled:opacity-50"
                           : "bg-blue-600 hover:bg-blue-500 disabled:opacity-50"
-                      }`}
+                        }`}
                     >
                       <Send className="w-3.5 h-3.5" /> Send
                     </button>
@@ -899,7 +885,7 @@ export default function AgentDashboard() {
         </div>
       </main>
 
-      {/* New Ticket Modal */}
+      { }
       {isNewTicketOpen && (
         <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4">
           <div className="bg-white rounded-xl shadow-xl border border-slate-200 max-w-lg w-full p-6 flex flex-col gap-4 animate-in fade-in">

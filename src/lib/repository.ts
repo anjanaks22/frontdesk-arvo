@@ -15,16 +15,14 @@ import {
 } from "./sla";
 import { sanitizeMessagesForRole } from "./permissions";
 
-// In-memory singleton state
+
 const memoryState = {
   agents: [...ARVO_AGENTS],
   tickets: generateSeedTickets(),
 };
 
 export class TicketRepository {
-  /**
-   * List tickets with optional filtering
-   */
+
   static async listTickets(params: {
     filter?: "all" | "late" | "waiting" | "assigned";
     agentId?: string;
@@ -35,7 +33,7 @@ export class TicketRepository {
 
     let tickets = [...memoryState.tickets];
 
-    // Filter by search query
+
     if (search && search.trim()) {
       const q = search.toLowerCase().trim();
       tickets = tickets.filter(
@@ -46,7 +44,7 @@ export class TicketRepository {
       );
     }
 
-    // Map to evaluated DTOs
+
     const evaluated = tickets.map((t) => {
       const agent = memoryState.agents.find((a) => a.id === t.assignedToId) || null;
       const sla = evaluateTicketSla({
@@ -96,7 +94,7 @@ export class TicketRepository {
       };
     });
 
-    // Apply categorical filters
+
     if (filter === "late") {
       return evaluated.filter((t) => t.slaStatus.isLate);
     }
@@ -110,9 +108,7 @@ export class TicketRepository {
     return evaluated;
   }
 
-  /**
-   * Get single ticket by ID with full messages and audit logs
-   */
+
   static async getTicketById(id: string, role: "AGENT" | "CUSTOMER" | "ADMIN" = "AGENT"): Promise<TicketDetailDto | null> {
     const t = memoryState.tickets.find((item) => item.id === id);
     if (!t) return null;
@@ -128,7 +124,7 @@ export class TicketRepository {
       pausedAt: t.pausedAt,
     });
 
-    // INC-0304: Strictly sanitize messages if requested by customer
+
     const messagesWithTicketId = t.messages.map((m) => ({
       ...m,
       ticketId: t.id,
@@ -184,10 +180,7 @@ export class TicketRepository {
     };
   }
 
-  /**
-   * Atomic Ticket Claim (Fixes INC-0291)
-   * Prevents two agents from claiming the same ticket concurrently.
-   */
+
   static async claimTicket(params: {
     ticketId: string;
     agentId: string;
@@ -199,7 +192,7 @@ export class TicketRepository {
       throw new Error("Ticket not found");
     }
 
-    // Atomic race-condition check (INC-0291)
+
     if (ticket.assignedToId && ticket.assignedToId !== agentId) {
       const existingAgent = memoryState.agents.find((a) => a.id === ticket.assignedToId);
       throw new Error(
@@ -238,9 +231,7 @@ export class TicketRepository {
     return ticket;
   }
 
-  /**
-   * Post message (Customer reply or Internal Team Note)
-   */
+
   static async addMessage(params: {
     ticketId: string;
     senderId?: string | null;
@@ -255,10 +246,10 @@ export class TicketRepository {
 
     const now = new Date();
 
-    // INC-0304 check: If sender is customer, isPrivate cannot be true
+
     const verifiedIsPrivate = senderRole === "CUSTOMER" ? false : Boolean(isPrivate);
 
-    // Save message
+
     const messageId = `msg-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`;
     ticket.messages.push({
       id: messageId,
@@ -270,7 +261,7 @@ export class TicketRepository {
       createdAt: now,
     });
 
-    // 1. If Agent sends first public reply, record firstResponseAt and evaluate reply SLA
+
     if (senderRole === "AGENT" && !verifiedIsPrivate && !ticket.firstResponseAt) {
       ticket.firstResponseAt = now;
       const isLate = now > ticket.slaReplyDue;
@@ -286,7 +277,7 @@ export class TicketRepository {
         createdAt: now,
       });
     } else if (senderRole === "AGENT" && verifiedIsPrivate) {
-      // Internal note audit
+
       ticket.auditLogs.push({
         id: `audit-${Date.now()}`,
         actorId: senderId || null,
@@ -298,8 +289,7 @@ export class TicketRepository {
       });
     }
 
-    // 2. If Customer replies to a ticket that was WAITING_ON_CUSTOMER:
-    // Resume the SLA clock and advance the deadlines by the business time paused!
+
     if (senderRole === "CUSTOMER" && ticket.status === "WAITING_ON_CUSTOMER" && ticket.pausedAt) {
       const { newReplyDue, newResolveDue, pausedWorkingMinutes } = resumeDeadlinesAfterPause(
         ticket.slaReplyDue,
@@ -332,9 +322,7 @@ export class TicketRepository {
     return ticket;
   }
 
-  /**
-   * Update Status (e.g. WAITING_ON_CUSTOMER, RESOLVED, CLOSED, REOPEN)
-   */
+
   static async updateStatus(params: {
     ticketId: string;
     newStatus: TicketStatus;
@@ -351,7 +339,6 @@ export class TicketRepository {
 
     const now = new Date();
 
-    // Check Reopen rule: Customer can only reopen within 7 days of resolution
     if (
       (oldStatus === "RESOLVED" || oldStatus === "CLOSED") &&
       (newStatus === "OPEN" || newStatus === "IN_PROGRESS")
@@ -365,22 +352,22 @@ export class TicketRepository {
       ticket.reopenDeadline = null;
     }
 
-    // When moving into WAITING_ON_CUSTOMER, pause the SLA timer
+
     if (newStatus === "WAITING_ON_CUSTOMER") {
       ticket.pausedAt = now;
     }
 
-    // When marking RESOLVED:
+
     if (newStatus === "RESOLVED") {
       ticket.resolvedAt = now;
-      // 7 calendar days to reopen
+
       ticket.reopenDeadline = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);
       if (ticket.pausedAt) {
         ticket.pausedAt = null;
       }
     }
 
-    // When marking CLOSED:
+
     if (newStatus === "CLOSED") {
       ticket.closedAt = now;
       if (ticket.pausedAt) ticket.pausedAt = null;
@@ -401,18 +388,15 @@ export class TicketRepository {
         newStatus === "WAITING_ON_CUSTOMER"
           ? "Status changed to WAITING_ON_CUSTOMER. SLA timer paused."
           : newStatus === "RESOLVED"
-          ? "Ticket marked as resolved. 7-day customer reopening window initiated."
-          : `Status changed from ${oldStatus} to ${newStatus}.`,
+            ? "Ticket marked as resolved. 7-day customer reopening window initiated."
+            : `Status changed from ${oldStatus} to ${newStatus}.`,
       createdAt: now,
     });
 
     return ticket;
   }
 
-  /**
-   * Update Urgency / Priority (The First Meeting Question)
-   * "What happens to the timer if we change a ticket to urgent in the middle?"
-   */
+
   static async updatePriority(params: {
     ticketId: string;
     newPriority: Priority;
@@ -427,10 +411,7 @@ export class TicketRepository {
     if (oldPriority === newPriority) return ticket;
 
     const now = new Date();
-    // Rule implementation for changing to Urgent mid-flight:
-    // If upgraded to URGENT:
-    // 1. If no first response yet, reset reply deadline to 2 business hours from NOW.
-    // 2. Reset resolution deadline to same business day 18:30.
+
     const newTargets = calculateInitialSla(newPriority, now);
     const oldReplyDue = ticket.slaReplyDue;
     const oldResolveDue = ticket.slaResolveDue;
@@ -455,9 +436,7 @@ export class TicketRepository {
     return ticket;
   }
 
-  /**
-   * Create a new ticket
-   */
+
   static async createTicket(params: {
     title: string;
     description: string;
@@ -518,9 +497,7 @@ export class TicketRepository {
     return newTicket;
   }
 
-  /**
-   * Get list of agents
-   */
+
   static async getAgents(): Promise<SeedAgent[]> {
     return memoryState.agents;
   }

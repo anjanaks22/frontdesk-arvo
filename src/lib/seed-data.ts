@@ -66,26 +66,25 @@ export interface SeedTicket {
 export function generateSeedTickets(): SeedTicket[] {
   const now = new Date();
 
-  // Friday ticket scenario from Meera's quote:
-  // Arrived Friday at 6:00 PM (18:00). SLA must NOT breach over the weekend!
+
   const fridayCreated = new Date(now.getTime() - 2 * 24 * 60 * 60 * 1000);
   fridayCreated.setHours(18, 0, 0, 0);
   const fridaySla = calculateInitialSla("URGENT", fridayCreated);
 
-  // INC-0291 Replica: Unassigned urgent ticket testing atomic claim
-  const t1Created = new Date(now.getTime() - 45 * 60 * 1000); // 45 min ago
+
+  const t1Created = new Date(now.getTime() - 45 * 60 * 1000);
   const t1Sla = calculateInitialSla("URGENT", t1Created);
 
-  // INC-0304 Replica: Ticket with confidential internal note
+
   const t2Created = new Date(now.getTime() - 3 * 60 * 60 * 1000);
   const t2Sla = calculateInitialSla("MEDIUM", t2Created);
 
-  // Ticket in WAITING_ON_CUSTOMER (Paused)
+
   const t3Created = new Date(now.getTime() - 24 * 60 * 60 * 1000);
   const t3Sla = calculateInitialSla("LOW", t3Created);
   const t3Paused = new Date(now.getTime() - 6 * 60 * 60 * 1000);
 
-  // Ticket that is already LATE / BREACHED
+
   const t4Created = new Date(now.getTime() - 48 * 60 * 60 * 1000);
   const t4Sla = calculateInitialSla("URGENT", t4Created);
 
@@ -99,7 +98,7 @@ export function generateSeedTickets(): SeedTicket[] {
       status: "OPEN",
       customerName: "Karthik Raja",
       customerEmail: "karthik@fintech.io",
-      assignedToId: null, // Open to test race condition / claim
+      assignedToId: null,
       version: 1,
       createdAt: t1Created,
       firstResponseAt: null,
@@ -177,7 +176,7 @@ export function generateSeedTickets(): SeedTicket[] {
           senderId: "agent-1",
           senderName: "Meera Nair (Lead)",
           senderRole: "AGENT",
-          isPrivate: true, // INTERNAL NOTE! Verified never sent to customer
+          isPrivate: true,
           body: "INTERNAL NOTE (INC-0304 Protection): Stripe transaction ID is txn_883920. Gateway retry logic caused the double debit. Refund pending manager authorization.",
           createdAt: new Date(t2Created.getTime() + 35 * 60 * 1000),
         },

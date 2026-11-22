@@ -5,22 +5,22 @@ export const WORK_START_MINUTE = 30;
 export const WORK_END_HOUR = 18;
 export const WORK_END_MINUTE = 30;
 
-// 9 hours = 540 minutes per working day
+
 export const WORK_DAY_MINUTES = 540;
 
-// Standard festival holidays (can be customized or pulled from config)
+
 export const DEFAULT_HOLIDAYS = new Set<string>([
-  "2026-01-01", // New Year's Day
-  "2026-01-26", // Republic Day
-  "2026-05-01", // May Day
-  "2026-08-15", // Independence Day
-  "2026-10-02", // Gandhi Jayanti
-  "2026-10-20", // Dussehra / Festival
-  "2026-11-08", // Diwali / Deepavali
-  "2026-12-25", // Christmas
+  "2026-01-01",
+  "2026-01-26",
+  "2026-05-01",
+  "2026-08-15",
+  "2026-10-02",
+  "2026-10-20",
+  "2026-11-08",
+  "2026-12-25",
 ]);
 
-/** Format date to YYYY-MM-DD */
+
 export function toDateString(d: Date): string {
   const year = d.getFullYear();
   const month = String(d.getMonth() + 1).padStart(2, "0");
@@ -28,9 +28,9 @@ export function toDateString(d: Date): string {
   return `${year}-${month}-${day}`;
 }
 
-/** Check if given calendar date is a working day (Mon-Fri and not a holiday) */
+
 export function isWorkingDay(d: Date, holidays: Set<string> = DEFAULT_HOLIDAYS): boolean {
-  const dayOfWeek = d.getDay(); // 0 is Sunday, 6 is Saturday
+  const dayOfWeek = d.getDay();
   if (dayOfWeek === 0 || dayOfWeek === 6) {
     return false;
   }
@@ -40,27 +40,26 @@ export function isWorkingDay(d: Date, holidays: Set<string> = DEFAULT_HOLIDAYS):
   return true;
 }
 
-/** Returns 09:30 AM for the given date */
+
 export function getWorkDayStart(d: Date): Date {
   const start = new Date(d);
   start.setHours(WORK_START_HOUR, WORK_START_MINUTE, 0, 0);
   return start;
 }
 
-/** Returns 18:30 (6:30 PM) for the given date */
+
 export function getWorkDayEnd(d: Date): Date {
   const end = new Date(d);
   end.setHours(WORK_END_HOUR, WORK_END_MINUTE, 0, 0);
   return end;
 }
 
-/** If a timestamp falls on weekend, holiday, or outside 9:30-18:30, advance to next active business moment */
 export function getNextBusinessInstant(d: Date, holidays: Set<string> = DEFAULT_HOLIDAYS): Date {
   let current = new Date(d);
 
   while (true) {
     if (!isWorkingDay(current, holidays)) {
-      // Advance to 09:30 of next calendar day
+
       current.setDate(current.getDate() + 1);
       current = getWorkDayStart(current);
       continue;
@@ -70,23 +69,23 @@ export function getNextBusinessInstant(d: Date, holidays: Set<string> = DEFAULT_
     const dayEnd = getWorkDayEnd(current);
 
     if (current < dayStart) {
-      // Arrived before 9:30 on working day, snaps to 9:30
+
       return dayStart;
     }
 
     if (current >= dayEnd) {
-      // Arrived at or after 18:30, advance to 09:30 next calendar day
+
       current.setDate(current.getDate() + 1);
       current = getWorkDayStart(current);
       continue;
     }
 
-    // Inside 9:30 to 18:30 on a working day
+
     return current;
   }
 }
 
-/** Add business minutes to a date, skipping weekends, holidays, and outside-hours */
+
 export function addWorkingMinutes(
   startDate: Date,
   minutesToAdd: number,
@@ -103,7 +102,7 @@ export function addWorkingMinutes(
       return new Date(current.getTime() + remainingMinutes * 60 * 1000);
     } else {
       remainingMinutes -= minutesLeftToday;
-      // Move to 9:30 of next working day
+
       current.setDate(current.getDate() + 1);
       current = getWorkDayStart(current);
       current = getNextBusinessInstant(current, holidays);
@@ -113,7 +112,7 @@ export function addWorkingMinutes(
   return current;
 }
 
-/** Calculate working minutes elapsed between two dates */
+
 export function calculateWorkingMinutesBetween(
   startDate: Date,
   endDate: Date,
@@ -143,7 +142,7 @@ export function calculateWorkingMinutesBetween(
       break;
     }
 
-    // Advance to next day 09:30
+
     current.setDate(current.getDate() + 1);
     current = getWorkDayStart(current);
     current = getNextBusinessInstant(current, holidays);
@@ -152,18 +151,7 @@ export function calculateWorkingMinutesBetween(
   return totalMinutes;
 }
 
-/**
- * Compute initial SLA targets according to Meera's rules:
- * - URGENT:
- *     First reply: 2 working hours (120 minutes)
- *     Resolution: Same working day (18:30)
- * - MEDIUM:
- *     First reply: Half day (4.5 working hours = 270 minutes)
- *     Resolution: 3 working days (27 working hours = 1620 minutes)
- * - LOW:
- *     First reply: 1 working day (9 working hours = 540 minutes)
- *     Resolution: 1 working week (5 working days = 45 working hours = 2700 minutes)
- */
+
 export function calculateInitialSla(
   priority: Priority,
   createdAt: Date = new Date(),
@@ -176,8 +164,7 @@ export function calculateInitialSla(
 
   switch (priority) {
     case "URGENT":
-      replyMinutes = 120; // 2 working hours
-      // "fix it the same working day": end of that business day (18:30)
+      replyMinutes = 120;
       const sameDayEnd = getWorkDayEnd(effectiveStart);
       return {
         replyDue: addWorkingMinutes(effectiveStart, replyMinutes, holidays),
@@ -185,13 +172,13 @@ export function calculateInitialSla(
       };
 
     case "MEDIUM":
-      replyMinutes = 270; // 4.5 hours = half day
-      resolveMinutes = 3 * WORK_DAY_MINUTES; // 3 working days
+      replyMinutes = 270;
+      resolveMinutes = 3 * WORK_DAY_MINUTES;
       break;
 
     case "LOW":
-      replyMinutes = 1 * WORK_DAY_MINUTES; // 1 working day
-      resolveMinutes = 5 * WORK_DAY_MINUTES; // 1 working week (5 working days)
+      replyMinutes = 1 * WORK_DAY_MINUTES;
+      resolveMinutes = 5 * WORK_DAY_MINUTES;
       break;
   }
 
@@ -201,9 +188,7 @@ export function calculateInitialSla(
   };
 }
 
-/**
- * Handle pause when moving to WAITING_ON_CUSTOMER and resumption on customer reply
- */
+
 export function resumeDeadlinesAfterPause(
   oldReplyDue: Date,
   oldResolveDue: Date,
@@ -220,7 +205,6 @@ export function resumeDeadlinesAfterPause(
   };
 }
 
-/** Check if ticket in WAITING_ON_CUSTOMER has exceeded 1 working week (~45 working hours) of inactivity */
 export function isEligibleForAutoClose(
   pausedAt: Date | null,
   now: Date = new Date(),
@@ -228,11 +212,11 @@ export function isEligibleForAutoClose(
 ): boolean {
   if (!pausedAt) return false;
   const waitingWorkingMinutes = calculateWorkingMinutesBetween(pausedAt, now, holidays);
-  // 5 working days = 45 working hours = 2700 minutes
+
   return waitingWorkingMinutes >= 5 * WORK_DAY_MINUTES;
 }
 
-/** Check if ticket can be reopened (Within 7 calendar days after being resolved) */
+
 export function canReopenTicket(resolvedAt: Date | null, now: Date = new Date()): {
   allowed: boolean;
   reason?: string;
@@ -254,9 +238,7 @@ export function canReopenTicket(resolvedAt: Date | null, now: Date = new Date())
   return { allowed: true };
 }
 
-/**
- * Real-time SLA Status Evaluation for UI and APIs
- */
+
 export function evaluateTicketSla(ticket: {
   status: TicketStatus;
   priority: Priority;
@@ -274,7 +256,7 @@ export function evaluateTicketSla(ticket: {
   const isPaused = ticket.status === "WAITING_ON_CUSTOMER";
   const isDone = ticket.status === "RESOLVED" || ticket.status === "CLOSED";
 
-  // Reply SLA Evaluation
+
   let isReplyLate = false;
   let replyRemainingMinutes = 0;
 
@@ -283,7 +265,7 @@ export function evaluateTicketSla(ticket: {
     replyRemainingMinutes = 0;
   } else {
     if (isPaused) {
-      // Clock is paused at pausedAt
+
       const checkPoint = ticket.pausedAt ?? now;
       isReplyLate = checkPoint > ticket.slaReplyDue;
       replyRemainingMinutes = Math.max(
@@ -298,7 +280,7 @@ export function evaluateTicketSla(ticket: {
     }
   }
 
-  // Resolve SLA Evaluation
+
   let isResolveLate = false;
   let resolveRemainingMinutes = 0;
 
