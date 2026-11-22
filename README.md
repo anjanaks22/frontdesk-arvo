@@ -6,8 +6,8 @@
 
 ## 🚀 Live Demo & Key Highlights
 
-- **Live URL**: *(Add your deployed URL here, e.g. Vercel / Render / Fly.io)*
-- **Repository**: *(Add your GitHub repository URL here)*
+- **Live URL**: [https://frontdesk-arvo-six.vercel.app](https://frontdesk-arvo-six.vercel.app)
+- **Repository**: [https://github.com/anjanaks22/frontdesk-arvo](https://github.com/anjanaks22/frontdesk-arvo)
 - **Tech Stack**: Next.js 16 (App Router), TypeScript, Tailwind CSS, PostgreSQL, Prisma 7, Lucide Icons.
 
 ---
